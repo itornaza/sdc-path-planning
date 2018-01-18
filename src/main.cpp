@@ -8,13 +8,14 @@
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
+#include "spline.h"
 
 using namespace std;
 
 // For convenience
 using json = nlohmann::json;
 
-// For converting back and forth between radians and degrees.
+// For converting back and forth between radians and degrees
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
@@ -198,7 +199,7 @@ int main() {
                (uWS::WebSocket<uWS::SERVER> ws,
                 char *data, size_t length,
                 uWS::OpCode opCode) {
-    // "42" at the start of the message means there's a websocket message event.
+    // "42" at the start of the message means there's a websocket message event
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     //auto sdata = string(data).substr(0, length);
@@ -230,7 +231,8 @@ int main() {
           double end_path_s = j[1]["end_path_s"];
           double end_path_d = j[1]["end_path_d"];
 
-          // Sensor Fusion Data, a list of all other cars on the same side of the road
+          // Sensor Fusion Data:
+          // get a list of all other cars on the same side of the road
           auto sensor_fusion = j[1]["sensor_fusion"];
 
           json msgJson;
@@ -238,10 +240,19 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
-          // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+          //********************************************************************
+          // + Begin project code
+          //********************************************************************
+          
+          // TODO: define a path made up of (x,y) points that the car will
+          // visit sequentially every .02 seconds
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
+          //********************************************************************
+          // - End project code
+          //********************************************************************
+          
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
           // this_thread::sleep_for(chrono::milliseconds(1000));
