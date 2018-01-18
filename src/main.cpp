@@ -244,14 +244,17 @@ int main() {
           // + Begin project code
           //********************************************************************
           
-          // TODO: define a path made up of (x,y) points that the car will
+          // TODO: Define a path made up of (x,y) points that the car will
           // visit sequentially every .02 seconds
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
-
+          
+          
+          
           //********************************************************************
           // - End project code
           //********************************************************************
+          
+          msgJson["next_x"] = next_x_vals;
+          msgJson["next_y"] = next_y_vals;
           
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
