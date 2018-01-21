@@ -7,6 +7,11 @@ using namespace std;
 
 namespace Helpers {
   
+  struct SensorData {
+    double speed;
+    double s;
+  };
+  
   // For converting back and forth between radians and degrees
   constexpr double pi() { return M_PI; }
   double deg2rad(double x) { return x * pi() / 180; }
@@ -147,6 +152,17 @@ namespace Helpers {
     
     return {x,y};
   }
+  
+  // Get the lane's minimum distance from the center yellow line
+  int get_lane_min_d(int lane, int lane_width) {
+    return lane * lane_width;
+  }
+  
+  // Get the lane's maximum distance from the center yellow line
+  int get_lane_max_d(int lane, int lane_width) {
+    return lane_width * (1 + lane);
+  }
+  
 }
 
 #endif /* HELPERS_H_ */
