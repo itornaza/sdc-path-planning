@@ -57,8 +57,7 @@ int main() {
   int lane_width = 4;
   
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy, &lane, &lane_width,
-               &lane_change_wp]
+               &map_waypoints_dx, &map_waypoints_dy, &lane, &lane_width]
                (uWS::WebSocket<uWS::SERVER> ws,
                 char *data, size_t length,
                 uWS::OpCode opCode) {
@@ -127,19 +126,20 @@ int main() {
           }
           
           //********************************************************************
-          // Behavior planner and sensor fusion
+          // Behavior planner
           //********************************************************************
           
           double closestDist_s = MAX_S;
           bool change_lane = false;
           
+          //--------------------
           // Car is in my lane
+          //--------------------
+          
           for (int i = 0; i < sensor_fusion.size(); i++) {
             float d = sensor_fusion[i][6];
-            
             if (d > get_lane_min_d(lane, lane_width) &&
                 d < get_lane_max_d(lane, lane_width)) {
-              
               // Get target car state
               double vx = sensor_fusion[i][3];
               double vy = sensor_fusion[i][4];
@@ -149,10 +149,10 @@ int main() {
               
               // Check s values greater than mine and s gap
               if ((check_car_s > car_s) &&
-                 ((check_car_s - car_s) < 30) &&
+                 ((check_car_s - car_s) < FOLLOW_LEAD_S) &&
                  ((check_car_s - car_s) < closestDist_s)) {
                 closestDist_s = check_car_s - car_s;
-                if (closestDist_s > 20) {
+                if (closestDist_s > MIN_FOLLOW_LEAD_S) {
                   // Match that front car speed
                   ref_vel = check_speed * METRIC_2_MPH;
                 } else {
@@ -165,10 +165,15 @@ int main() {
           } // End for - Sensor fusion
           
           if (change_lane) {
-            // Check to the left
+            
+            //-----------------------
+            // 1. Check to the left
+            //-----------------------
+            
             if ((lane - 1 >= 0)) {
+              bool clear_to_pass_left = true;
               for (int i = 0; i < sensor_fusion.size(); i++) {
-                // Mark if there is any other car +/- 30m on the left lane
+                // Check if there is any other car on the left lane
                 float d = sensor_fusion[i][6];
                 if (d > get_lane_min_d(lane - 1, lane_width) &&
                     d < get_lane_max_d(lane - 1, lane_width)) {
@@ -178,18 +183,25 @@ int main() {
                   double check_speed = sqrt((vx * vx) + (vy * vy));
                   double check_car_s = sensor_fusion[i][5];
                   
-                  // Check gap
-                  if (!(car_s - check_car_s < 30 && car_s - check_car_s > -20)){
-                    lane -= 1;
-                    change_lane = false;
-                  }
-                }
-              }
-            }
+                  // Check passing window
+                  if (car_s - check_car_s < TRAILER_S &&
+                      car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
+                    clear_to_pass_left = false;
+                  } // End if - other car in window
+                } // End if - other car in left lane
+              } // End for - Sensor Fusion
+              if (clear_to_pass_left) {
+                lane -= 1;
+                change_lane = false;
+              } // End if - clear to pass left
+            } // End if - change lane to left
             
-            // Check to the right
+            //-----------------------
+            // 2. Check to the right
+            //-----------------------
+            
             if (change_lane && (lane + 1 <= 2)) {
-              
+              bool clear_to_pass_right = true;
               for (int i = 0; i < sensor_fusion.size(); i++) {
                 // Mark if there is any other car +/- 30m on the left lane
                 float d = sensor_fusion[i][6];
@@ -201,15 +213,20 @@ int main() {
                   double check_speed = sqrt((vx * vx) + (vy * vy));
                   double check_car_s = sensor_fusion[i][5];
                   
-                  // Check gap
-                  if (!(car_s - check_car_s < 30 && car_s - check_car_s > -20)){
-                    lane += 1;
-                    change_lane = false;
-                  }
-                }
-              }
-            }
-          } // End if - change lane
+                  // Check passing window
+                  if (car_s - check_car_s < TRAILER_S &&
+                      car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
+                    clear_to_pass_right = false;
+                  } // End if - other car in window
+                } // End if - other car in right lane
+              } // End for - Sensor Fusion
+              if (clear_to_pass_right) {
+                lane += 1;
+                change_lane = false;
+              } // End if - clear to pass right
+            } // End if - change lane to right
+            
+          } // End outer if - change lane
           
           //********************************************************************
           // Trajectory generation using spline
@@ -244,13 +261,14 @@ int main() {
           
           // In Frenet coordinates add 30m spaced points ahead of the starting
           // reference
-          vector<double> next_wp0 = getXY(car_s + 30, (2 + 4 * lane),
+          double d_lane = lane_width * (0.5 + lane);
+          vector<double> next_wp0 = getXY(car_s + NEAR_POINT, d_lane,
                                           map_waypoints_s, map_waypoints_x,
                                           map_waypoints_y);
-          vector<double> next_wp1 = getXY(car_s + 60, (2 + 4 * lane),
+          vector<double> next_wp1 = getXY(car_s + MID_POINT, d_lane,
                                           map_waypoints_s, map_waypoints_x,
                                           map_waypoints_y);
-          vector<double> next_wp2 = getXY(car_s + 90, (2 + 4 * lane),
+          vector<double> next_wp2 = getXY(car_s + FAR_POINT, d_lane,
                                           map_waypoints_s, map_waypoints_x,
                                           map_waypoints_y);
           
