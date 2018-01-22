@@ -55,7 +55,6 @@ int main() {
   // Start in lane 1
   int lane = 1;
   int lane_width = 4;
-  int lane_change_wp = 0;
   
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
                &map_waypoints_dx, &map_waypoints_dy, &lane, &lane_width,
@@ -132,8 +131,7 @@ int main() {
           //********************************************************************
           
           double closestDist_s = MAX_S;
-          bool change_lanes = false;
-          bool check_right = true;
+          bool change_lane = false;
           
           // Car is in my lane
           for (int i = 0; i < sensor_fusion.size(); i++) {
@@ -150,33 +148,30 @@ int main() {
               check_car_s += ((double)prev_size * UPDATE_PERIOD * check_speed);
               
               // Check s values greater than mine and s gap
-              if((check_car_s > car_s) &&
+              if ((check_car_s > car_s) &&
                  ((check_car_s - car_s) < 30) &&
                  ((check_car_s - car_s) < closestDist_s)) {
-               
                 closestDist_s = check_car_s - car_s;
-                if(closestDist_s > 20) {
+                if (closestDist_s > 20) {
                   // Match that front car speed
                   ref_vel = check_speed * METRIC_2_MPH;
-                  change_lanes = true;
                 } else {
                   // Go slightly slower than the front car speed
                   ref_vel = check_speed * METRIC_2_MPH - 5;
-                  change_lanes = true;
                 }
+                change_lane = true;
               }
             } // End if - Car is in my lane
           } // End for - Sensor fusion
           
-          if (change_lanes) {
+          if (change_lane) {
             // Check to the left
-            if (lane - 1 >= 0) {
+            if ((lane - 1 >= 0)) {
               for (int i = 0; i < sensor_fusion.size(); i++) {
                 // Mark if there is any other car +/- 30m on the left lane
                 float d = sensor_fusion[i][6];
                 if (d > get_lane_min_d(lane - 1, lane_width) &&
                     d < get_lane_max_d(lane - 1, lane_width)) {
-                  
                   // Get target car state
                   double vx = sensor_fusion[i][3];
                   double vy = sensor_fusion[i][4];
@@ -184,22 +179,22 @@ int main() {
                   double check_car_s = sensor_fusion[i][5];
                   
                   // Check gap
-                  if (!(car_s - check_car_s < 30 && car_s - check_car_s > -30)) {
+                  if (!(car_s - check_car_s < 30 && car_s - check_car_s > -20)){
                     lane -= 1;
-                    check_right = false;
+                    change_lane = false;
                   }
                 }
               }
             }
             
             // Check to the right
-            if (check_right && (lane + 1 <= 2)) {
+            if (change_lane && (lane + 1 <= 2)) {
+              
               for (int i = 0; i < sensor_fusion.size(); i++) {
                 // Mark if there is any other car +/- 30m on the left lane
                 float d = sensor_fusion[i][6];
                 if (d > get_lane_min_d(lane + 1, lane_width) &&
                     d < get_lane_max_d(lane + 1, lane_width)) {
-                  
                   // Get target car state
                   double vx = sensor_fusion[i][3];
                   double vy = sensor_fusion[i][4];
@@ -207,13 +202,14 @@ int main() {
                   double check_car_s = sensor_fusion[i][5];
                   
                   // Check gap
-                  if (!(car_s - check_car_s < 20 && car_s - check_car_s > -10)) {
+                  if (!(car_s - check_car_s < 30 && car_s - check_car_s > -20)){
                     lane += 1;
+                    change_lane = false;
                   }
                 }
               }
             }
-          }
+          } // End if - change lane
           
           //********************************************************************
           // Trajectory generation using spline
