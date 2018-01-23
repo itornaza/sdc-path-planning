@@ -199,7 +199,7 @@ int main() {
                   
                   // Check passing window
                   if (car_s - check_car_s < TRAILER_S &&
-                      car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
+                      car_s - check_car_s > -(MIN_FOLLOW_LEAD_S + 2)) {
                     clear_to_pass = false;
                   } // End if - other car in window
                 } // End if - other car in left lane
@@ -232,7 +232,7 @@ int main() {
                   
                   // Check passing window
                   if (car_s - check_car_s < TRAILER_S &&
-                      car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
+                      car_s - check_car_s > -(MIN_FOLLOW_LEAD_S + 2)) {
                     clear_to_pass = false;
                   } // End if - other car in window
                 } // End if - other car in right lane

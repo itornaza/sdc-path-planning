@@ -17,7 +17,6 @@ In order for the vehicle to safely navigate around the track and be able to pass
 
 The code that defines this behavior can be found in the `/src/main.cpp` and from `line 132` to `line 246`. The car is driving close to the speed limit until another slower car blocks the lane that our car is driving. When this happens, our car progressively slows down. The follow traffic block can be found in  `/src/main.cpp` and from `line 145` to `line 176`.
 
-
 As this happens, the car tries to find a passing window first on the left, and if that fails, on the right of the leading traffic. If it finds a clear window, it initiates a passing maneouver and accelerates towards the speed limit once again. In order to locate a clear window, it searches for other vehicles in the lane of interest (first left and then right) 32m ahead of it and 25m behind it. If no other car blocks its way, it goes ahead and passes the slow traffic. For more details on the implementation look at `/src/main.cpp` and from `line 184` to `line 245`.
 
 The information about the other traffic is provided by the sensor fusion block from the simulator in json format. The information for each car is captured and adjusted for the simulator latency in order to perform safe predictions about its position and velocity. See `lines 150-156`.
