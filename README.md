@@ -8,7 +8,7 @@ The car's localization and sensor fusion data are provided by the simulator, the
 
 The project rubric can be found [here](https://review.udacity.com/#!/projects/318/rubric).
 
-![alt text](https://github.com/itornaza/sdc-path-planning/images/cover.png "Path planning in action")
+![alt text](https://github.com/itornaza/sdc-path-planning/blob/master/images/cover.png "Path planning in action")
 
 ## Behavior planner
 
