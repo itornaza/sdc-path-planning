@@ -15,7 +15,7 @@ namespace Constants {
   // Behavior planner
   const int FOLLOW_LEAD_S = 30;
   const int MIN_FOLLOW_LEAD_S = 20;
-  const int TRAILER_S = 30;
+  const int TRAILER_S = 25;
   
   // Spline
   const int NEAR_POINT = 30;
