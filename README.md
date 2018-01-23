@@ -9,9 +9,12 @@ The car's localization and sensor fusion data are provided by the simulator, the
 
 In order for the vehicle to safely navigate around the track and be able to pass slower vehicles in order for it to reach the end of the track in an acceptable timeframe it needs to adhere a set of rules that define how it will tackle to situations that there is slower traffic ahead that blocks its way.
 
-The code that defines this behavior can be found in the `/src/main.cpp` and from `line 132` to `line 246`. The car is driving close to the speed limit until another slower car blocks the lane that our car is driving. When this happens, our car progressively slows down. As this happens, the car tries to find a passing window first on the left, and if that fails, on the right of the leading traffic. If it finds a clear window, it initiates a passing maneouver and accelerates towards the speed limit once again. In order to locate a clear window, it searches for other vehicles in the lane of interest (first left and then right) 32m ahead of it and 25m behind it. If no other car blocks its way, it goes ahead and pass the slow traffic.
+The code that defines this behavior can be found in the `/src/main.cpp` and from `line 132` to `line 246`. The car is driving close to the speed limit until another slower car blocks the lane that our car is driving. When this happens, our car progressively slows down. The follow traffic block can be found in the `/src/main.cpp` and from `line 145` to `line 176`.
 
-The information about the other traffic is provided by the sensor fusion block from the simulator in json format. The information for each car is captured and adjusted for the simulator latency in order to perform safe predictions about its position and velocity.
+
+As this happens, the car tries to find a passing window first on the left, and if that fails, on the right of the leading traffic. If it finds a clear window, it initiates a passing maneouver and accelerates towards the speed limit once again. In order to locate a clear window, it searches for other vehicles in the lane of interest (first left and then right) 32m ahead of it and 25m behind it. If no other car blocks its way, it goes ahead and pass the slow traffic. `/src/main.cpp` and from `line 184` to `line 245`.
+
+The information about the other traffic is provided by the sensor fusion block from the simulator in json format. The information for each car is captured and adjusted for the simulator latency in order to perform safe predictions about its position and velocity. See `lines 150-156`.
 
 All the calculations for the relative location between our car and the traffic is done in the Frenet domain using the `s` and `d` coordinates for the longitudinal and lateral distance between the vehicles. Where `s` provides us the window in the longitudinal direction in order for our car to decide if there is enough room to pass the slow vehicle, and `d` is used to describe the lanes of interest.
 
@@ -24,6 +27,8 @@ The generation of the trajectories using the spline tool is described in detail 
 The trajectory is defined by a path of (x, y) points that are visited sequentialy every 0.02 seconds from the simulator. In order to create a smooth trajectory, we use the last 2 points of the previously calculated trajectory provided to us by the simulator. Having these two points, we calculate the tanential angle as the direction of the car.
 
 We then create three points at 30m, 60m, and 90m ahead of the car as anchor points for the spline tool. We shift the coordinates from vertical to horizontal to avoid errors that are generated close to the vertical direction. After doing so, we create the spline and evenly space the 50 points that we need with in the curve. As a final step, we shift back the coordinates to the original vertical setting and push the trajectory to the simulator.
+
+The trajectory generation block can be found in the `/src/main.cpp` and from `line 252` to `line 367`.
 
 ## Basic Build Instructions
 
