@@ -129,36 +129,47 @@ int main() {
           // Behavior planner
           //********************************************************************
           
-          double closestDist_s = MAX_S;
+          double closest_dist_s = MAX_S;
+          
+          // Used to cascade through the different passing slow mover options
+          // and reduce the complexity of the code blocks
           bool change_lane = false;
           
+          // Variable to clear when the car can perform a passing manouever
+          bool clear_to_pass = false;
+          
           //--------------------
-          // Car is in my lane
+          // Follow traffic
           //--------------------
           
           for (int i = 0; i < sensor_fusion.size(); i++) {
             float d = sensor_fusion[i][6];
             if (d > get_lane_min_d(lane, lane_width) &&
                 d < get_lane_max_d(lane, lane_width)) {
-              // Get target car state
+              // Get current target car state
               double vx = sensor_fusion[i][3];
               double vy = sensor_fusion[i][4];
               double check_speed = sqrt((vx * vx) + (vy * vy));
               double check_car_s = sensor_fusion[i][5];
-              check_car_s += ((double)prev_size * UPDATE_PERIOD * check_speed);
+              
+              // Predict the target car state after the update period
+              check_car_s += (double)prev_size * UPDATE_PERIOD * check_speed;
               
               // Check s values greater than mine and s gap
               if ((check_car_s > car_s) &&
                  ((check_car_s - car_s) < FOLLOW_LEAD_S) &&
-                 ((check_car_s - car_s) < closestDist_s)) {
-                closestDist_s = check_car_s - car_s;
-                if (closestDist_s > MIN_FOLLOW_LEAD_S) {
+                 ((check_car_s - car_s) < closest_dist_s)) {
+                closest_dist_s = check_car_s - car_s;
+                if (closest_dist_s > MIN_FOLLOW_LEAD_S) {
                   // Match that front car speed
                   ref_vel = check_speed * METRIC_2_MPH;
                 } else {
-                  // Go slightly slower than the front car speed
+                  // Go slightly slower than the target car speed
                   ref_vel = check_speed * METRIC_2_MPH - 5;
                 }
+                
+                // We are following traffic at lower speeds and need to pass
+                // slow movers
                 change_lane = true;
               }
             } // End if - Car is in my lane
@@ -171,26 +182,29 @@ int main() {
             //-----------------------
             
             if ((lane - 1 >= 0)) {
-              bool clear_to_pass_left = true;
+              clear_to_pass = true;
               for (int i = 0; i < sensor_fusion.size(); i++) {
                 // Check if there is any other car on the left lane
                 float d = sensor_fusion[i][6];
                 if (d > get_lane_min_d(lane - 1, lane_width) &&
                     d < get_lane_max_d(lane - 1, lane_width)) {
-                  // Get target car state
+                  // Get current target car state
                   double vx = sensor_fusion[i][3];
                   double vy = sensor_fusion[i][4];
                   double check_speed = sqrt((vx * vx) + (vy * vy));
                   double check_car_s = sensor_fusion[i][5];
                   
+                  // Predict the car state after the update period
+                  check_car_s += (double)prev_size * UPDATE_PERIOD *check_speed;
+                  
                   // Check passing window
                   if (car_s - check_car_s < TRAILER_S &&
                       car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
-                    clear_to_pass_left = false;
+                    clear_to_pass = false;
                   } // End if - other car in window
                 } // End if - other car in left lane
               } // End for - Sensor Fusion
-              if (clear_to_pass_left) {
+              if (clear_to_pass) {
                 lane -= 1;
                 change_lane = false;
               } // End if - clear to pass left
@@ -201,26 +215,29 @@ int main() {
             //-----------------------
             
             if (change_lane && (lane + 1 <= 2)) {
-              bool clear_to_pass_right = true;
+              bool clear_to_pass = true;
               for (int i = 0; i < sensor_fusion.size(); i++) {
                 // Mark if there is any other car +/- 30m on the left lane
                 float d = sensor_fusion[i][6];
                 if (d > get_lane_min_d(lane + 1, lane_width) &&
                     d < get_lane_max_d(lane + 1, lane_width)) {
-                  // Get target car state
+                  // Get current target car state
                   double vx = sensor_fusion[i][3];
                   double vy = sensor_fusion[i][4];
                   double check_speed = sqrt((vx * vx) + (vy * vy));
                   double check_car_s = sensor_fusion[i][5];
                   
+                  // Predict the car state after the update period
+                  check_car_s += (double)prev_size * UPDATE_PERIOD *check_speed;
+                  
                   // Check passing window
                   if (car_s - check_car_s < TRAILER_S &&
                       car_s - check_car_s > -MIN_FOLLOW_LEAD_S + 2) {
-                    clear_to_pass_right = false;
+                    clear_to_pass = false;
                   } // End if - other car in window
                 } // End if - other car in right lane
               } // End for - Sensor Fusion
-              if (clear_to_pass_right) {
+              if (clear_to_pass) {
                 lane += 1;
                 change_lane = false;
               } // End if - clear to pass right
@@ -344,10 +361,6 @@ int main() {
             next_x_vals.push_back(x_point);
             next_y_vals.push_back(y_point);
           }
-          
-          //********************************************************************
-          // - End project code
-          //********************************************************************
           
           // Send trajectory to the simulator for execution
           msgJson["next_x"] = next_x_vals;
