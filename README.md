@@ -11,6 +11,8 @@ The project rubric can be found [here](https://review.udacity.com/#!/projects/31
 ![alt text](https://github.com/itornaza/sdc-path-planning/blob/master/images/cover.png "Path planning in action")
 ![alt text](https://github.com/itornaza/sdc-path-planning/blob/master/images/cover_2.png "Path planning in action")
 
+A video that shows the self driving car driving down the highway on [youtube](https://youtu.be/xbWaVIDDG8A).
+
 ## Behavior planner
 
 In order for the vehicle to safely navigate around the track and be able to pass slower vehicles in order for it to reach the end of the track in an acceptable timeframe it needs to adhere a set of rules. These rules define how it tackles situations that there is slower traffic ahead that blocks its way.
